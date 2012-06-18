@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Tue Nov 08 21:27:53 EST 2011
-surefire-testng-2.7.1.jar>project=
-surefire-testng-2.7.1.pom>project=
+#Mon Jun 18 17:37:50 EDT 2012
+surefire-testng-2.7.1.jar>nexus-local=
+surefire-testng-2.7.1.pom>nexus-local=

@@ -25,9 +25,9 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
@@ -45,11 +45,9 @@ public class FileUploaderB {
     
     private final BlobStoreContext ctx;
     
-    
-    
     public FileUploaderB(String provider, String identity, String credential) {
-        ctx = new BlobStoreContextFactory().createContext(provider, identity, credential, 
-                ImmutableSet.of(new Log4JLoggingModule()));
+        ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
     }
     
     public void uploadFile(File file) throws IOException, InterruptedException, ExecutionException {

@@ -27,10 +27,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobMap;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
@@ -51,8 +51,8 @@ public class MultiFileUploaderC {
     private final BlobStoreContext ctx;
     
     public MultiFileUploaderC(String provider, String identity, String credential) {
-        ctx = new BlobStoreContextFactory().createContext(provider, identity, credential, 
-                ImmutableSet.of(new Log4JLoggingModule()));
+        ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
     }
     
     public void uploadFiles(List<File> files) throws IOException {

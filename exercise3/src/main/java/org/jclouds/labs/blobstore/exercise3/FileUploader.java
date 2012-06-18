@@ -28,9 +28,9 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.filesystem.reference.FilesystemConstants;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
@@ -53,8 +53,9 @@ public class FileUploader {
         Properties config = new Properties();
         config.put(FilesystemConstants.PROPERTY_BASEDIR, 
                 checkNotNull(System.getProperty("java.io.tmpdir"), "java.io.tmpdir"));
-        ctx = new BlobStoreContextFactory().createContext(provider, identity, credential, 
-                ImmutableSet.of(new Log4JLoggingModule()), config);
+        ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).overrides(config)
+              .buildView(BlobStoreContext.class);
     }
     
     public void uploadFile(File file) throws IOException, InterruptedException, ExecutionException {

@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Tue Nov 08 21:27:19 EST 2011
-maven-resources-plugin-2.4.2.jar>project=
-maven-resources-plugin-2.4.2.pom>project=
+#Mon Jun 18 17:35:31 EDT 2012
+maven-resources-plugin-2.4.2.jar>nexus-local=
+maven-resources-plugin-2.4.2.pom>nexus-local=

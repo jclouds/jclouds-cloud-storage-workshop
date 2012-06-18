@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.blobstore.domain.PageSet;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
@@ -54,8 +54,8 @@ public class MyDropboxClient {
     private final BlobStore store;
     
     public MyDropboxClient(String provider, String identity, String credential) {
-        ctx = new BlobStoreContextFactory().createContext(provider, identity, credential, 
-                ImmutableSet.of(new Log4JLoggingModule()));
+        ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
         store = ctx.getBlobStore();
         createContainerIfNeeded(store);
     }

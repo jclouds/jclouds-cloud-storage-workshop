@@ -22,9 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.BlobStoreContextFactory;
 import org.jclouds.blobstore.options.CreateContainerOptions;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
@@ -42,7 +42,8 @@ public class ImageUploader {
     private final BlobStore store;
     
     public ImageUploader(String provider, String identity, String credential) {
-        ctx = new BlobStoreContextFactory().createContext(provider, identity, credential, ImmutableSet.of(new Log4JLoggingModule()));
+        ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
         System.out.format("Provider '%s' uses %s consistency%n", provider, ctx.getConsistencyModel());
         store = ctx.getBlobStore();
     }

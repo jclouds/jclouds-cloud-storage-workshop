@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Tue Nov 08 21:27:20 EST 2011
-maven-surefire-plugin-2.7.1.jar>project=
-maven-surefire-plugin-2.7.1.pom>project=
+#Mon Jun 18 17:35:38 EDT 2012
+maven-surefire-plugin-2.7.1.jar>nexus-local=
+maven-surefire-plugin-2.7.1.pom>nexus-local=
