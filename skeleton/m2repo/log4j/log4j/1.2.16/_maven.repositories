@@ -1,4 +1,6 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-log4j-1.2.16.jar>nexus-local=
-log4j-1.2.16.pom>nexus-local=
+#Wed Jun 20 10:06:46 MDT 2012
+log4j-1.2.16.jar>central=
+log4j-1.2.16.pom>central=
+log4j-1.2.16-javadoc.jar>central=
+log4j-1.2.16-sources.jar>central=

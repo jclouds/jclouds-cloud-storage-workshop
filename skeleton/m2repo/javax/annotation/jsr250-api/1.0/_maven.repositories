@@ -1,4 +1,5 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-jsr250-api-1.0.pom>nexus-local=
-jsr250-api-1.0.jar>nexus-local=
+#Wed Jun 20 10:06:09 MDT 2012
+jsr250-api-1.0-sources.jar>central=
+jsr250-api-1.0.jar>central=
+jsr250-api-1.0.pom>central=

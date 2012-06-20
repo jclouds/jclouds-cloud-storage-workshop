@@ -11,6 +11,7 @@
   <version>20090531</version>
   <packaging>pom</packaging>
   <name>OAuth Core: Parent POM</name>
+
   <modules>
     <module>commons</module>
     <module>consumer</module>
@@ -19,6 +20,7 @@
     <module>provider</module>
     <module>test</module>
   </modules>
+
   <reporting>
     <plugins>
       <plugin>
@@ -30,11 +32,4 @@
       </plugin>
     </plugins>
   </reporting>
-  <repositories>
-    <repository>
-      <id>oauth</id>
-      <name>OAuth Repository</name>
-      <url>http://oauth.googlecode.com/svn/code/maven</url>
-    </repository>
-  </repositories>
 </project>

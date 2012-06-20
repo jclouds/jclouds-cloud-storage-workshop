@@ -11,6 +11,26 @@
   <version>20090531</version>
   <packaging>pom</packaging>
   <name>OAuth::Parent POM</name>
+  <description>An open protocol to allow API authentication in a simple and standard method from desktop and web applications.</description>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>sean@seansullivan.com</id>
+      <name>Sean Sullivan</name>
+    </developer>
+    <developer>
+      <id>jmkristian@gmail.com</id>
+      <name>JM Kristian</name>
+    </developer>
+  </developers>
 
   <modules>
     <module>core</module>
@@ -73,18 +93,6 @@
       </plugin>
     </plugins>
   </reporting>
-  <repositories>
-    <repository>
-      <id>oauth-local</id>
-      <name>Local OAuth Repository</name>
-      <url>file:../maven</url>
-    </repository>
-    <repository>
-      <id>oauth</id>
-      <name>OAuth Repository</name>
-      <url>http://oauth.googlecode.com/svn/code/maven</url>
-    </repository>
-  </repositories>
   <distributionManagement>
     <repository>
       <id>oauth-local</id>

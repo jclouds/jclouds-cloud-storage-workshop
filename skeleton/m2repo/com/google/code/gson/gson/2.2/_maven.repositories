@@ -1,4 +1,6 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-gson-2.2.pom>nexus-local=
-gson-2.2.jar>nexus-local=
+#Wed Jun 20 10:06:32 MDT 2012
+gson-2.2.jar>central=
+gson-2.2.pom>central=
+gson-2.2-javadoc.jar>central=
+gson-2.2-sources.jar>central=

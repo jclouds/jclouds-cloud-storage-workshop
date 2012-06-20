@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:37:05 EDT 2012
-plexus-interpolation-1.13.jar>nexus-local=
-plexus-interpolation-1.13.pom>nexus-local=
+#Wed Jun 20 10:00:06 MDT 2012
+plexus-interpolation-1.13.pom>central=
+plexus-interpolation-1.13.jar>central=

@@ -1,4 +1,5 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-aopalliance-1.0.jar>nexus-local=
-aopalliance-1.0.pom>nexus-local=
+#Wed Jun 20 10:06:05 MDT 2012
+aopalliance-1.0.pom>central=
+aopalliance-1.0-sources.jar>central=
+aopalliance-1.0.jar>central=

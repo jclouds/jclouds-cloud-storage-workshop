@@ -1,4 +1,6 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-javax.inject-1.jar>nexus-local=
-javax.inject-1.pom>nexus-local=
+#Wed Jun 20 10:06:30 MDT 2012
+javax.inject-1.jar>central=
+javax.inject-1.pom>central=
+javax.inject-1-sources.jar>central=
+javax.inject-1-javadoc.jar>central=

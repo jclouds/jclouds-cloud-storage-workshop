@@ -10,6 +10,7 @@
   <version>20100527</version>
   <packaging>jar</packaging>
   <name>OAuth Core</name>
+
   <dependencies>
   </dependencies>
 </project>

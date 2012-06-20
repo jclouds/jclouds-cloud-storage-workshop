@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:37:45 EDT 2012
-maven-reporting-api-2.0.9.jar>nexus-local=
-maven-reporting-api-2.0.9.pom>nexus-local=
+#Wed Jun 20 10:02:23 MDT 2012
+maven-reporting-api-2.0.9.jar>central=
+maven-reporting-api-2.0.9.pom>central=

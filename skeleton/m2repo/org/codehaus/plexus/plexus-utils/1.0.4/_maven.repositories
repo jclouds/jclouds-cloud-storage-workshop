@@ -1,4 +1,4 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:37:49 EDT 2012
-plexus-utils-1.0.4.jar>nexus-local=
-plexus-utils-1.0.4.pom>nexus-local=
+#Wed Jun 20 10:02:44 MDT 2012
+plexus-utils-1.0.4.jar>central=
+plexus-utils-1.0.4.pom>central=

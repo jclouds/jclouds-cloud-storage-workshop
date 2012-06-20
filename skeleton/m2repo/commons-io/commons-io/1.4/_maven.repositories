@@ -1,4 +1,6 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-commons-io-1.4.jar>nexus-local=
-commons-io-1.4.pom>nexus-local=
+#Wed Jun 20 10:06:43 MDT 2012
+commons-io-1.4.jar>central=
+commons-io-1.4.pom>central=
+commons-io-1.4-javadoc.jar>central=
+commons-io-1.4-sources.jar>central=

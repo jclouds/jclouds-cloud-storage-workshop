@@ -1,4 +1,6 @@
 #NOTE: This is an internal implementation file, its format can be changed without prior notice.
-#Mon Jun 18 17:36:25 EDT 2012
-guice-3.0.jar>nexus-local=
-guice-3.0.pom>nexus-local=
+#Wed Jun 20 10:06:29 MDT 2012
+guice-3.0.jar>central=
+guice-3.0-javadoc.jar>central=
+guice-3.0.pom>central=
+guice-3.0-sources.jar>central=
