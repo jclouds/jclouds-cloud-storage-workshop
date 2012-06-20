@@ -110,6 +110,11 @@
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.jclouds.labs</groupId>
+            <artifactId>greenqloud-storage</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>filesystem</artifactId>
             <version>${jclouds.version}</version>
