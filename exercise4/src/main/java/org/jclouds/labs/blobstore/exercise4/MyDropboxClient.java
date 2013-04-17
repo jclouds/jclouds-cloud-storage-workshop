@@ -24,7 +24,6 @@ import static java.lang.String.format;
 import static org.jclouds.blobstore.options.ListContainerOptions.Builder.inDirectory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,7 +66,7 @@ public class MyDropboxClient {
         }
     }
 
-    public void uploadFiles(String directory, List<File> files) throws IOException {
+    public void uploadFiles(String directory, List<File> files) {
         System.out.format("Uploading %s to directory '%s'%n", files, directory);
         for (File file : files) {
             store.putBlob(CONTAINER_NAME, store.blobBuilder(
@@ -100,12 +99,12 @@ public class MyDropboxClient {
     private static void tryDeleteContainer(BlobStore store) {
         try {
             store.deleteContainer(CONTAINER_NAME);
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length < 3) {
             System.out.format("%nUsage: %s <provider> <identity> <credential>%n", MyDropboxClient.class.getSimpleName());
             System.exit(1);

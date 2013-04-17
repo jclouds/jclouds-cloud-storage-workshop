@@ -23,10 +23,12 @@ package org.jclouds.labs.blobstore.exercise3;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
@@ -42,38 +44,47 @@ public class FileUploaderC {
     private static final int QUERY_RETRY_INTERVAL_MILLIS = 100;
     
     private final BlobStoreContext ctx;
+    private final ExecutorService executor;
     
     public FileUploaderC(String provider, String identity, String credential) {
         ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
-        .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
+              .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
+        executor = Executors.newSingleThreadExecutor(); // many other options available here
     }
     
-    public void uploadFile(File file) throws IOException, InterruptedException, ExecutionException {
-        AsyncBlobStore store = ctx.getAsyncBlobStore();
+    public void uploadFile(final File file) throws IOException, InterruptedException, ExecutionException {
+        final BlobStore store = ctx.getBlobStore();
         final String containerName = "test-container-3";
         long fileSize = file.length();
         System.out.format("Starting upload of %d bytes%n", fileSize);
-        String filename = file.getName();
+        final String filename = file.getName();
+        // simulates a different user uploading a blob for which we are waiting
+        executor.submit(new Runnable() {
+              @Override
+              public void run() {
+                 store.putBlob(containerName, store.blobBuilder(filename).payload(file).build());
+              }
+           });
         store.putBlob(containerName, store.blobBuilder(filename).payload(file).build());
-        waitUntilExists(store, containerName, filename);
-        waitUntilAvailable(store, containerName, filename);
+        waitUntilBlobExistsTrue(store, containerName, filename);
+        waitUntilContentAvailable(store, containerName, filename);
         byte[] payloadRead = ByteStreams.toByteArray(
-                store.getBlob(containerName, filename).get().getPayload().getInput());
+                store.getBlob(containerName, filename).getPayload().getInput());
         System.out.format("Retrieved blob size: %d bytes%n", payloadRead.length);
-        System.out.format("Blob metadata: %s%n", store.blobMetadata(containerName, filename).get().getContentMetadata());
+        System.out.format("Blob metadata: %s%n", store.blobMetadata(containerName, filename).getContentMetadata());
         tryDeleteContainer(store, containerName);
     }
     
-    private static void waitUntilExists(AsyncBlobStore store, String containerName, String blobName) throws InterruptedException, ExecutionException {
-        while (!store.blobExists(containerName, blobName).get()) {
+    private static void waitUntilBlobExistsTrue(BlobStore store, String containerName, String blobName) throws InterruptedException {
+        while (!store.blobExists(containerName, blobName)) {
             TimeUnit.MILLISECONDS.sleep(QUERY_RETRY_INTERVAL_MILLIS);
             System.out.println("Waiting for blob to 'exist'");
         }
         System.out.println("Blob exists");
     }
     
-    private static void waitUntilAvailable(AsyncBlobStore store, String containerName, String blobName) throws InterruptedException, ExecutionException {
-        while (store.blobMetadata(containerName, blobName).get()
+    private static void waitUntilContentAvailable(BlobStore store, String containerName, String blobName) throws InterruptedException {
+        while (store.blobMetadata(containerName, blobName)
                 .getContentMetadata().getContentLength() == null) {
             TimeUnit.MILLISECONDS.sleep(QUERY_RETRY_INTERVAL_MILLIS);
             System.out.println("Waiting for blob to become available");
@@ -81,11 +92,10 @@ public class FileUploaderC {
         System.out.println("Blob available");
     }
     
-    private static void tryDeleteContainer(AsyncBlobStore store, String containerName) {
+    private static void tryDeleteContainer(BlobStore store, String containerName) {
         try {
-            // block until complete
-            store.deleteContainer(containerName).get();
-        } catch (Exception exception) {
+            store.deleteContainer(containerName);
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }

@@ -21,7 +21,6 @@
 package org.jclouds.labs.blobstore.exercise2;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class MultiFileUploader {
               .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
     }
     
-    public void uploadFiles(List<File> files) throws IOException {
+    public void uploadFiles(List<File> files) {
         BlobStore store = ctx.getBlobStore();
         final String containerName = "test-container-2";
         long startTimeMillis = System.currentTimeMillis();
@@ -60,7 +59,7 @@ public class MultiFileUploader {
             store.putBlob(containerName, 
                     store.blobBuilder(filename).payload(file).build());
         }
-        System.out.format("Uploaded %d files in %dms", files.size(), 
+        System.out.format("Uploaded %d files in %dms%n", files.size(),
                 System.currentTimeMillis() - startTimeMillis);
         tryDeleteContainer(store, containerName);
     }
@@ -68,7 +67,7 @@ public class MultiFileUploader {
     private static void tryDeleteContainer(BlobStore store, String containerName) {
         try {
             store.deleteContainer(containerName);
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
@@ -77,7 +76,7 @@ public class MultiFileUploader {
         ctx.close();
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length < 3) {
             System.out.format("%nUsage: %s <provider> <identity> <credential>%n", MultiFileUploader.class.getSimpleName());
             System.exit(1);

@@ -21,24 +21,26 @@
 package org.jclouds.labs.blobstore.exercise2;
 
 import static com.google.common.collect.Lists.transform;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobMap;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * @author aphillips
@@ -49,39 +51,60 @@ public class MultiFileUploaderC {
     private static final String RESOURCE_DIR = "src/main/resources";
     
     private final BlobStoreContext ctx;
+    private final ListeningExecutorService executor;
     
     public MultiFileUploaderC(String provider, String identity, String credential) {
         ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
               .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
+        executor = MoreExecutors.listeningDecorator(newCachedThreadPool()); // many other options available here
     }
     
-    public void uploadFiles(List<File> files) throws IOException {
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // List cast guaranteed by invokeAll contract
+    public void uploadFiles(List<File> files) {
+        final BlobStore store = ctx.getBlobStore();
         final String containerName = "test-container-2";
-        BlobMap map = ctx.createBlobMap(containerName);
-        final BlobBuilder builder = map.blobBuilder();
-        List<Blob> blobs = transform(files, new Function<File, Blob>() {
+        List<Callable<String>> putBlobRequests = transform(files, new Function<File, Callable<String>>() {
                 @Override
-                public Blob apply(File input) {
-                    return builder.name(input.getName()).payload(input).build();
+                public Callable<String> apply(File input) {
+                    return lazyPutFileBlob(input, store, containerName);
                 }
             });
         long startTimeMillis = System.currentTimeMillis();
         System.out.format("Starting upload of %d files%n", files.size());
-        map.putAll(Maps.uniqueIndex(blobs, new Function<Blob, String>() {
-                @Override
-                public String apply(Blob input) {
-                    return input.getMetadata().getName();
-                }
-            }));
-        System.out.format("Uploaded %d files in %dms", files.size(), 
-                System.currentTimeMillis() - startTimeMillis);
-        tryDeleteContainer(ctx.getBlobStore(), containerName);
+        try {
+           List<String> etags = Futures.<String>successfulAsList((List) executor.invokeAll(putBlobRequests)).get();
+           System.out.format("Uploaded %d files in %dms%n", files.size(),
+                 System.currentTimeMillis() - startTimeMillis);
+           for (int i = 0; i < files.size(); i++) {
+              System.out.format("ETag for '%s': %s%n", files.get(i).getName(),
+                    Optional.fromNullable(etags.get(i)).or("<upload error>"));
+           }
+        } catch (InterruptedException exception) {
+           System.err.println("Interrupted whilst waiting for uploads to complete");
+        } catch (ExecutionException exception) {
+           System.err.println("Failed to retrieve ETags");
+        } finally {
+           tryDeleteContainer(ctx.getBlobStore(), containerName);
+        }
     }
     
+    private static Callable<String> lazyPutFileBlob(final File file,
+          final BlobStore store, final String containerName) {
+        return new Callable<String>() {
+              @Override
+              public String call() {
+                  String filename = file.getName();
+                  System.out.format("Uploading '%s'...%n", filename);
+                  return store.putBlob(containerName,
+                        store.blobBuilder(filename).payload(file).build());
+              }
+          };
+    }
+
     private static void tryDeleteContainer(BlobStore store, String containerName) {
         try {
             store.deleteContainer(containerName);
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
@@ -90,7 +113,7 @@ public class MultiFileUploaderC {
         ctx.close();
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length < 3) {
             System.out.format("%nUsage: %s <provider> <identity> <credential>%n", MultiFileUploaderC.class.getSimpleName());
             System.exit(1);
