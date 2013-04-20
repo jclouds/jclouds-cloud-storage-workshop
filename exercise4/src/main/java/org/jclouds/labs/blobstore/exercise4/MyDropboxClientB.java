@@ -21,20 +21,19 @@
 package org.jclouds.labs.blobstore.exercise4;
 
 import static com.google.common.collect.Lists.transform;
-import static com.google.common.collect.Maps.uniqueIndex;
+import static java.lang.String.format;
 import static org.jclouds.blobstore.options.ListContainerOptions.Builder.inDirectory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobMap;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.domain.PageSet;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
@@ -56,11 +55,13 @@ public class MyDropboxClientB {
     
     private final BlobStoreContext ctx;
     private final BlobStore store;
+    private final ExecutorService executor;
     
     public MyDropboxClientB(String provider, String identity, String credential) {
         ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
               .modules(ImmutableSet.of(new Log4JLoggingModule())).buildView(BlobStoreContext.class);
         store = ctx.getBlobStore();
+        executor = Executors.newCachedThreadPool(); // many other options available here
         createContainerIfNeeded(store);
     }
     
@@ -71,22 +72,15 @@ public class MyDropboxClientB {
         }
     }
 
-    public void uploadFiles(String directory, List<File> files) throws IOException {
-        BlobMap map = ctx.createBlobMap(CONTAINER_NAME, inDirectory(directory));
-        final BlobBuilder builder = map.blobBuilder();
-        List<Blob> blobs = transform(files, new Function<File, Blob>() {
-                @Override
-                public Blob apply(File input) {
-                    return builder.name(input.getName()).payload(input).build();
-                }
-            });
+    public void uploadFiles(final String directory, List<File> files) throws InterruptedException {
+        List<Callable<String>> putBlobRequests = transform(files, new Function<File, Callable<String>>() {
+              @Override
+              public Callable<String> apply(File input) {
+                  return lazyPutFileBlob(input, store, directory);
+              }
+          });
         System.out.format("Uploading %s to directory '%s'%n", files, directory);
-        map.putAll(uniqueIndex(blobs, new Function<Blob, String>() {
-            @Override
-            public String apply(Blob input) {
-                return input.getMetadata().getName();
-            }
-        }));
+        executor.invokeAll(putBlobRequests);
     }
 
     public List<String> list(String directory) {
@@ -110,16 +104,27 @@ public class MyDropboxClientB {
         tryDeleteContainer(store);
         ctx.close();
     }
-    
+
+    private static Callable<String> lazyPutFileBlob(final File file,
+          final BlobStore store, final String directory) {
+      return new Callable<String>() {
+            @Override
+            public String call() {
+               return store.putBlob(CONTAINER_NAME,
+                     store.blobBuilder(format("%s/%s", directory, file.getName())).payload(file).build());
+            }
+         };
+    }
+
     private static void tryDeleteContainer(BlobStore store) {
         try {
             store.deleteContainer(CONTAINER_NAME);
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws InterruptedException {
         if (args.length < 3) {
             System.out.format("%nUsage: %s <provider> <identity> <credential>%n", MyDropboxClientB.class.getSimpleName());
             System.exit(1);

@@ -25,18 +25,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.filesystem.reference.FilesystemConstants;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * @author aphillips
@@ -47,6 +50,7 @@ public class FileUploader {
     private static final int QUERY_RETRY_INTERVAL_MILLIS = 100;
     
     private final BlobStoreContext ctx;
+    private final ExecutorService executor;
     
     public FileUploader(String provider, String identity, String credential) {
         // create context for filesystem container
@@ -56,46 +60,53 @@ public class FileUploader {
         ctx = ContextBuilder.newBuilder(provider).credentials(identity, credential)
               .modules(ImmutableSet.of(new Log4JLoggingModule())).overrides(config)
               .buildView(BlobStoreContext.class);
+        executor = Executors.newSingleThreadExecutor(); // many other options available here
     }
     
-    public void uploadFile(File file) throws IOException, InterruptedException, ExecutionException {
-        AsyncBlobStore store = ctx.getAsyncBlobStore();
+    public void uploadFile(final File file) throws InterruptedException, ExecutionException, IOException {
+        final BlobStore store = ctx.getBlobStore();
         final String containerName = "test-container-3";
         long fileSize = file.length();
         System.out.format("Starting upload of %d bytes%n", fileSize);
-        String filename = file.getName();
-        ListenableFuture<String> putBlobOperation = store.putBlob(containerName, store.blobBuilder(filename).payload(file).build());
-        waitUntilExists(store, containerName, filename);
+        final String filename = file.getName();
+        // simulates a different user uploading a blob for which we are waiting
+        Future<String> putBlobOperation = executor.submit(new Callable<String>() {
+               @Override
+               public String call() throws Exception {
+                  return store.putBlob(containerName, store.blobBuilder(filename).payload(file).build());
+               }
+           });
+        waitUntilBlobExistsTrue(store, containerName, filename);
         byte[] payloadRead = ByteStreams.toByteArray(
-                store.getBlob(containerName, filename).get().getPayload().getInput());
+                store.getBlob(containerName, filename).getPayload().getInput());
         System.out.format("Retrieved blob size: %d bytes%n", payloadRead.length);
-        waitForUpload(putBlobOperation);
+        waitUntilUploaded(putBlobOperation);
         payloadRead = ByteStreams.toByteArray(
-                store.getBlob(containerName, filename).get().getPayload().getInput());
+                store.getBlob(containerName, filename).getPayload().getInput());
         System.out.format("Retrieved blob size now: %d bytes%n", payloadRead.length);
         tryDeleteContainer(store, containerName);
     }
     
-    private static void waitUntilExists(AsyncBlobStore store, String containerName, String blobName) throws InterruptedException, ExecutionException {
-        while (!store.blobExists(containerName, blobName).get()) {
+    private static void waitUntilBlobExistsTrue(BlobStore store, String containerName, String blobName) throws InterruptedException {
+        while (!store.blobExists(containerName, blobName)) {
             TimeUnit.MILLISECONDS.sleep(QUERY_RETRY_INTERVAL_MILLIS);
             System.out.println("Waiting for blob to 'exist'");
         }
         System.out.println("Blob exists");
     }
     
-    private static void waitForUpload(ListenableFuture<String> uploadOperation) throws InterruptedException, ExecutionException {
+    private static void waitUntilUploaded(Future<String> uploadOperation) throws InterruptedException, ExecutionException {
         System.out.println("Waiting for upload to complete");
         uploadOperation.get();
         System.out.println("Upload completed");        
     }
     
-    private static void tryDeleteContainer(AsyncBlobStore store, String containerName) {
+    private static void tryDeleteContainer(BlobStore store, String containerName) {
         try {
             // throws IOException without the "clearContainer" call
-            store.clearContainer(containerName).get();
-            store.deleteContainer(containerName).get();
-        } catch (Exception exception) {
+            store.clearContainer(containerName);
+            store.deleteContainer(containerName);
+        } catch (RuntimeException exception) {
             System.err.format("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
