@@ -72,9 +72,9 @@ public class ImageUploader {
          
     public void tryDeleteContainer(String containerName) {
         System.out.format("Deleting public container '%s'%n", containerName);
-             try {
+        try {
             store.deleteContainer(containerName);
-             } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             System.err.printf("Unable to delete container due to: %s%n", exception.getMessage());
         }
     }
